@@ -217,7 +217,7 @@ class RedCanaryConnector(BaseConnector):
 
         try:
             r = request_func(
-                endpoint, verify=self.config.get("verify_server_cert", False), **kwargs
+                endpoint, verify=self.config.get("verify_server_cert", True), **kwargs
             )
         except requests.exceptions.ConnectionError:
             error_message = (

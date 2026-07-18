@@ -16,6 +16,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **url** | required | string | Red Canary instance URL (ex. https://domain.my.redcanary.co) |
 **api_key** | required | password | Red Canary API authentication key |
+**verify_server_cert** | optional | boolean | Verify server SSL certificate |
 
 ### Supported Actions
 
