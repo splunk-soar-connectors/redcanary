@@ -15,6 +15,8 @@
 #
 # Licensed under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
 
+from urllib.parse import urlsplit
+
 import requests
 
 PAGE_SIZE = 50
@@ -27,16 +29,20 @@ class RCDetections:
     Class for enriching detections from Red Canary's API
     """
 
-    def __init__(self, detections, token):
+    def __init__(self, detections, token, base_url=None, verify_server_cert=True):
         """
         Parameters:
             :detections:    List of detections returned by RC API
             :token:         RC API token
+            :base_url:      Configured Red Canary instance URL
+            :verify_server_cert: Whether to verify the server certificate
         """
 
         # super(RCDetections, self).__init__()
         self.Detections = detections
         self.headers = self._generate_headers(token)
+        self.allowed_origin = self._get_origin(base_url)
+        self.verify_server_cert = verify_server_cert
 
         # Dictionary that track state of detection enrichment selections
         self.state = dict(
@@ -54,6 +60,23 @@ class RCDetections:
         """
         return {"X-Api-Key": token}
 
+    @staticmethod
+    def _get_origin(url):
+        """Return a normalized URL origin, or None for an invalid URL."""
+        try:
+            parsed_url = urlsplit(url or "")
+            scheme = parsed_url.scheme.lower()
+            hostname = (parsed_url.hostname or "").lower()
+            port = parsed_url.port
+        except (TypeError, ValueError):
+            return None
+
+        if not scheme or not hostname:
+            return None
+
+        default_ports = {"http": 80, "https": 443}
+        return scheme, hostname, port if port is not None else default_ports.get(scheme)
+
     def _make_url_get_request(self, url, headers):
         """
         Makes API get request and returns raw response
@@ -64,11 +87,16 @@ class RCDetections:
         Returns:
             :return: raw respnose from request
         """
-        print(f"Making API request to {url}")
+        if not self.allowed_origin or self._get_origin(url) != self.allowed_origin:
+            raise ValueError(
+                "Refusing an enrichment link outside the configured Red Canary instance"
+            )
+
+        print("Making API request to a verified Red Canary API URL")
         try:
-            return requests.get(url, headers=headers)
+            return requests.get(url, headers=headers, verify=self.verify_server_cert)
         except Exception:
-            print(f"Exception occurred making request to {url} with headers {headers}")
+            print("Exception occurred making request to the Red Canary API")
             raise
 
     def _parse_user_details(self, json_response):

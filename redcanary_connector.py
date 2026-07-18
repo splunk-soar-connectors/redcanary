@@ -559,7 +559,12 @@ class RedCanaryConnector(BaseConnector):
         self.save_progress("Enriching detection data. This can take a long time")
 
         try:
-            obj_detections = RCDetections(detections, self.config.get("api_key"))
+            obj_detections = RCDetections(
+                detections,
+                self.config.get("api_key"),
+                self.config.get("url"),
+                self.config.get("verify_server_cert", True),
+            )
             self.save_progress("Pulling user details")
             obj_detections.get_user_details()
             self.save_progress("Pulling detector details")
