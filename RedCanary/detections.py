@@ -1,3 +1,16 @@
+# Copyright (c) 2026 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # File: detections.py
 #
 # Licensed under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
@@ -9,7 +22,7 @@ DETECTIONS = []
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
-class RCDetections():
+class RCDetections:
     """
     Class for enriching detections from Red Canary's API
     """
@@ -26,18 +39,20 @@ class RCDetections():
         self.headers = self._generate_headers(token)
 
         # Dictionary that track state of detection enrichment selections
-        self.state = dict({
-            "user_info": False,
-            "endpoint_info": False,
-            "detection_info": False,
-            "detector_info": False
-        })
+        self.state = dict(
+            {
+                "user_info": False,
+                "endpoint_info": False,
+                "detection_info": False,
+                "detector_info": False,
+            }
+        )
 
     def _generate_headers(self, token):
         """
         Returns dictionary for headers used in Red Canary API request
         """
-        return {'X-Api-Key': token}
+        return {"X-Api-Key": token}
 
     def _make_url_get_request(self, url, headers):
         """
@@ -52,7 +67,7 @@ class RCDetections():
         print(f"Making API request to {url}")
         try:
             return requests.get(url, headers=headers)
-        except:
+        except Exception:
             print(f"Exception occurred making request to {url} with headers {headers}")
             raise
 
@@ -69,22 +84,27 @@ class RCDetections():
 
         # We assume there is only ever a single user entry
         # If that's not the case we will fail and return the data
-        if json_response.get('meta').get('total_items') != 1:
-
+        if json_response.get("meta").get("total_items") != 1:
             return False, user_dict
 
         try:
-            rc_uid = json_response.get('data')[0].get('id')
+            rc_uid = json_response.get("data")[0].get("id")
 
-            user_data = json_response.get('data')[0].get('attributes')
+            user_data = json_response.get("data")[0].get("attributes")
 
-            user_dict.update({rc_uid: {
-                'rc_uid': json_response.get('data')[0].get('id'),
-                'username': user_data.get('username'),
-                'uid': user_data.get('uid'),
-                'domain': user_data.get('reporting_tags').get('domain'),
-                'local_account': user_data.get('reporting_tags').get('local_account')
-            }})
+            user_dict.update(
+                {
+                    rc_uid: {
+                        "rc_uid": json_response.get("data")[0].get("id"),
+                        "username": user_data.get("username"),
+                        "uid": user_data.get("uid"),
+                        "domain": user_data.get("reporting_tags").get("domain"),
+                        "local_account": user_data.get("reporting_tags").get(
+                            "local_account"
+                        ),
+                    }
+                }
+            )
 
             self.Users.update(user_dict)
 
@@ -107,11 +127,11 @@ class RCDetections():
         # We assume there is only ever a single user entry
         # If that's not the case we will fail and return the data
         try:
-            if json_response.get('meta').get('total_items') != 1:
+            if json_response.get("meta").get("total_items") != 1:
                 return False, endpoint_dict
 
-            rc_enid = json_response.get('data')[0].get('id')
-            endpoint_dict.update({rc_enid: json_response.get('data')[0]})
+            rc_enid = json_response.get("data")[0].get("id")
+            endpoint_dict.update({rc_enid: json_response.get("data")[0]})
 
             self.Endpoints.update(endpoint_dict)
 
@@ -131,12 +151,22 @@ class RCDetections():
             :return: Tuple(True/False, dictionary of user details)
         """
 
-        rc_uid = detection.get('relationships', {}).get('related_endpoint_user', {}).get('data', {}).get('id')
+        rc_uid = (
+            detection.get("relationships", {})
+            .get("related_endpoint_user", {})
+            .get("data", {})
+            .get("id")
+        )
 
         if rc_uid in self.Users:
             return True, self.Users.get(rc_uid)
 
-        user_link = detection.get('relationships', {}).get('related_endpoint_user', {}).get('links', {}).get('related')
+        user_link = (
+            detection.get("relationships", {})
+            .get("related_endpoint_user", {})
+            .get("links", {})
+            .get("related")
+        )
 
         response = self._make_url_get_request(user_link, self.headers)
 
@@ -153,12 +183,22 @@ class RCDetections():
             :return: Tuple(True/False, dictionary of endpoint details)
         """
 
-        rc_enid = detection.get('relationships', {}).get('affected_endpoint', {}).get('data', {}).get('id')
+        rc_enid = (
+            detection.get("relationships", {})
+            .get("affected_endpoint", {})
+            .get("data", {})
+            .get("id")
+        )
 
         if rc_enid in self.Endpoints:
             return True, self.Endpoints.get(rc_enid)
 
-        endpoint_link = detection.get('relationships', {}).get('affected_endpoint', {}).get('links', {}).get('related')
+        endpoint_link = (
+            detection.get("relationships", {})
+            .get("affected_endpoint", {})
+            .get("links", {})
+            .get("related")
+        )
 
         response = self._make_url_get_request(endpoint_link, self.headers)
 
@@ -174,13 +214,13 @@ class RCDetections():
             :return: None
         """
 
-        detection_link = detection.get('links', {}).get('activity_timeline', {}).get('href')
+        detection_link = (
+            detection.get("links", {}).get("activity_timeline", {}).get("href")
+        )
 
         response = self._make_url_get_request(detection_link, self.headers)
 
-        detection.update(
-            {'detection_details': response.json().get('data')}
-        )
+        detection.update({"detection_details": response.json().get("data")})
 
     def _gen_detector_details(self, detection):
         """
@@ -192,12 +232,10 @@ class RCDetections():
             :return: None
         """
 
-        detection_link = detection.get('links', {}).get('detectors', {}).get('href')
+        detection_link = detection.get("links", {}).get("detectors", {}).get("href")
 
         response = self._make_url_get_request(detection_link, self.headers)
-        detection.update(
-            {'detector_details': response.json().get('data')}
-        )
+        detection.update({"detector_details": response.json().get("data")})
 
     def get_user_details(self):
 
@@ -212,7 +250,7 @@ class RCDetections():
             status, user_details = self._gen_user_details(detection)
 
             if status:
-                detection.update({'user_details': user_details})
+                detection.update({"user_details": user_details})
 
         return True
 
@@ -238,7 +276,7 @@ class RCDetections():
             status, endpoint_details = self._gen_endpoint_details(detection)
 
             if status:
-                detection.update({'endpoint_details': endpoint_details})
+                detection.update({"endpoint_details": endpoint_details})
 
         return True
 
