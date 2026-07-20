@@ -10,7 +10,7 @@
     "python_version": "3",
     "product_version_regex": ".*",
     "publisher": "Red Canary",
-    "license": "Copyright (c) Red Canary, 2021",
+    "license": "Copyright (c) Red Canary, 2021-2026",
     "app_version": "1.1.0",
     "utctime_updated": "2021-05-11T06:58:58.000000Z",
     "package_name": "phantom_redcanary",
@@ -29,6 +29,12 @@
             "data_type": "password",
             "required": true,
             "order": 1
+        },
+        "verify_server_cert": {
+            "description": "Verify server SSL certificate",
+            "data_type": "boolean",
+            "default": true,
+            "order": 2
         }
     },
     "actions": [
@@ -221,5 +227,21 @@
             },
             "versions": "EQ(*)"
         }
-    ]
+    ],
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "chardet",
+                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+            }
+        ]
+    },
+    "pip313_dependencies": {
+        "wheel": [
+            {
+                "module": "chardet",
+                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+            }
+        ]
+    }
 }
