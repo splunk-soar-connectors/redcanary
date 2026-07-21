@@ -1,7 +1,7 @@
 # Red Canary
 
 Publisher: Red Canary <br>
-Connector Version: 1.0.0 <br>
+Connector Version: 1.1.1 <br>
 Product Vendor: Red Canary <br>
 Product Name: Red Canary <br>
 Minimum Product Version: 4.9.39220
